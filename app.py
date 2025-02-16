@@ -1,18 +1,33 @@
-from flask import Flask,render_template,request
+import os
+import requests
 import pickle
 import numpy as np
+from flask import Flask, render_template, request
 
-popular_df = pickle.load(open('popular.pkl','rb'))
-pt = pickle.load(open('pt.pkl','rb'))
-books = pickle.load(open('books.pkl','rb'))
-similarity_scores = pickle.load(open('similarity_scores.pkl','rb'))
+# Google Drive direct download link (Replace with your actual link)
+BOOKS_URL = "https://drive.google.com/file/d/1-S9GgoW_jwyddSBRWi_-IMcIOAEpJ8J4/view?usp=drive_link"
+BOOKS_FILE = "books.pkl"
+
+# Check if the file exists, if not, download it
+if not os.path.exists(BOOKS_FILE):
+    print("Downloading books.pkl...")
+    response = requests.get(BOOKS_URL)
+    with open(BOOKS_FILE, "wb") as file:
+        file.write(response.content)
+    print("Download complete!")
+
+# Load pickled files
+popular_df = pickle.load(open('popular.pkl', 'rb'))
+pt = pickle.load(open('pt.pkl', 'rb'))
+books = pickle.load(open(BOOKS_FILE, 'rb'))  # Use downloaded file
+similarity_scores = pickle.load(open('similarity_scores.pkl', 'rb'))
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
     return render_template('index.html',
-                           book_name = list(popular_df['Book-Title'].values),
+                           book_name=list(popular_df['Book-Title'].values),
                            author=list(popular_df['Book-Author'].values),
                            image=list(popular_df['Image-URL-M'].values),
                            votes=list(popular_df['num_ratings'].values),
@@ -23,7 +38,7 @@ def index():
 def recommend_ui():
     return render_template('recommend.html')
 
-@app.route('/recommend_books',methods=['post'])
+@app.route('/recommend_books', methods=['post'])
 def recommend():
     user_input = request.form.get('user_input')
     index = np.where(pt.index == user_input)[0][0]
@@ -41,7 +56,7 @@ def recommend():
 
     print(data)
 
-    return render_template('recommend.html',data=data)
+    return render_template('recommend.html', data=data)
 
 if __name__ == '__main__':
     app.run(debug=True)
