@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 import pickle
 import numpy as np
+import pandas as pt
 
 # Load pre-trained models and datasets
 popular_df = pickle.load(open('popular.pkl', 'rb'))
